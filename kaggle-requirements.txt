@@ -1,0 +1,24 @@
+# JARVIS Kaggle POC - Minimal Requirements
+# ==========================================
+#
+# This is a lightweight requirements file for running JARVIS in Kaggle notebooks.
+# Only essential packages are included to minimize installation time and dependencies.
+
+# Core AI/ML
+google-generativeai>=0.3.0    # Gemini API client
+numpy>=1.24.0                  # Numerical operations for embeddings
+
+# Optional: Web capabilities (for enhanced research)
+requests>=2.31.0               # HTTP requests for web search
+
+# Optional: Better async support
+asyncio>=3.4.3                 # Async operations (usually built-in)
+
+# Note: The POC is designed to work with minimal dependencies
+# Additional packages from the full version that are NOT required:
+# - chromadb (we use in-memory vector store instead)
+# - redis (no external state management)
+# - fastapi (POC is notebook-based, not API)
+# - langchain/langgraph (simplified orchestration)
+# - speech_recognition/gtts (no voice capabilities in POC)
+# - opencv-python (no video processing in POC)
