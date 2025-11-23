@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: jarvis-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - jarvis-network
+    restart: unless-stopped
+
+  # MongoDB for persistent storage
+  mongodb:
+    image: mongo:7
+    container_name: jarvis-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: jarvis_db
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - jarvis-network
+    restart: unless-stopped
+
+  # ChromaDB for vector storage
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: jarvis-chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - chromadb-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    networks:
+      - jarvis-network
+    restart: unless-stopped
+
+  # RabbitMQ for message queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: jarvis-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - jarvis-network
+    restart: unless-stopped
+
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: jarvis-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deployment/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - jarvis-network
+    restart: unless-stopped
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: jarvis-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - jarvis-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # Jarvis API Server
+  jarvis-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jarvis-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=development
+      - REDIS_HOST=redis
+      - MONGODB_URI=mongodb://mongodb:27017
+      - CHROMADB_HOST=chromadb
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./notebooks:/app/notebooks
+    networks:
+      - jarvis-network
+    depends_on:
+      - redis
+      - mongodb
+      - chromadb
+      - rabbitmq
+    restart: unless-stopped
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+networks:
+  jarvis-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  mongodb-data:
+  chromadb-data:
+  rabbitmq-data:
+  prometheus-data:
+  grafana-data:
