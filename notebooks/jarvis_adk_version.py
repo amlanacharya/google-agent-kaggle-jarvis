@@ -710,14 +710,24 @@ def run_main_safely():
     try:
         # If no running loop, this raises RuntimeError
         loop = asyncio.get_running_loop()
+        # We're in a notebook with a running loop
+        # Try to apply nest_asyncio to allow nested loops
+        try:
+            import nest_asyncio
+            nest_asyncio.apply()
+            print("📓 Notebook environment detected, applying nest_asyncio...")
+            asyncio.run(main())
+        except ImportError:
+            # nest_asyncio not available, schedule as task
+            print("🔄 Notebook environment detected (install nest_asyncio for better support)")
+            print("📌 Scheduling task... Please wait for execution to complete.")
+            task = asyncio.ensure_future(main())
+            return task
     except RuntimeError:
         # Normal script execution
         asyncio.run(main())
-    else:
-        # Running inside event loop (Jupyter/Kaggle)
-        task = asyncio.create_task(main())
-        return task
 
 
 if __name__ == "__main__":
     _run_task = run_main_safely()
+    # Note: In notebooks without nest_asyncio, you may need to await _run_task
