@@ -639,6 +639,10 @@ async def interactive_mode():
                 verbose=True
             )
 
+        except EOFError:
+            print("\n⚠️  Interactive mode is not supported in Jupyter/Kaggle notebooks.")
+            print("Please run the automated demo instead (option 1).")
+            break
         except KeyboardInterrupt:
             print("\n\n👋 Goodbye!")
             break
@@ -684,6 +688,11 @@ async def main():
             print("Running automated demo (default)...")
             await run_demo()
 
+    except EOFError:
+        # Running in Jupyter/Kaggle notebook - no interactive input available
+        print("📓 Running in notebook environment - starting automated demo...")
+        print()
+        await run_demo()
     except KeyboardInterrupt:
         print("\n\n👋 Exiting...")
     except Exception as e:

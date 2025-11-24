@@ -708,6 +708,10 @@ async def interactive_mode():
             print(f"\n🤖 JARVIS ({response.agent_name}, confidence: {response.confidence:.2f}):")
             print(response.content)
 
+        except EOFError:
+            print("\n⚠️  Interactive mode is not supported in Jupyter/Kaggle notebooks.")
+            print("Please run the automated demo instead (option 1).")
+            break
         except KeyboardInterrupt:
             print("\n\n👋 Goodbye!")
             break
@@ -748,6 +752,11 @@ if __name__ == "__main__":
             print("Running automated demo (default)...")
             asyncio.run(run_demo())
 
+    except EOFError:
+        # Running in Jupyter/Kaggle notebook - no interactive input available
+        print("📓 Running in notebook environment - starting automated demo...")
+        print()
+        asyncio.run(run_demo())
     except KeyboardInterrupt:
         print("\n\n👋 Exiting...")
     except Exception as e:
