@@ -1,0 +1,39 @@
+# JARVIS Google ADK Version - Requirements
+# ==========================================
+#
+# This requirements file is for the Google ADK-based implementation of JARVIS.
+# It includes the official Google Agent Development Kit.
+
+# Google ADK (Agent Development Kit)
+google-adk>=0.1.0              # Official Google agent framework
+
+# Google Generative AI (Gemini)
+google-generativeai>=0.3.0     # Gemini API client
+
+# Core dependencies
+numpy>=1.24.0                  # Numerical operations
+
+# Note: google-adk includes many dependencies automatically:
+# - google-genai (types, API clients)
+# - asyncio support
+# - session management
+# - tool infrastructure
+
+# Optional: Enhanced capabilities
+requests>=2.31.0               # HTTP requests (if needed beyond google_search)
+
+# Comparison with Custom POC:
+# ---------------------------
+# Custom POC requirements:
+#   - google-generativeai (API)
+#   - numpy (vectors)
+#   - requests (optional)
+#   Total: ~50MB
+#
+# ADK requirements:
+#   - google-adk (framework + all deps)
+#   - google-generativeai (included)
+#   - numpy
+#   Total: ~200MB (includes framework infrastructure)
+#
+# Trade-off: More dependencies but official support and patterns
