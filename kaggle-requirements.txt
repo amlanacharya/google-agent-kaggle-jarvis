@@ -8,11 +8,11 @@
 google-generativeai>=0.3.0    # Gemini API client
 numpy>=1.24.0                  # Numerical operations for embeddings
 
+# Notebook support (highly recommended for Kaggle/Jupyter)
+nest-asyncio>=1.5.0            # Allows nested async event loops in notebooks
+
 # Optional: Web capabilities (for enhanced research)
 requests>=2.31.0               # HTTP requests for web search
-
-# Optional: Better async support
-asyncio>=3.4.3                 # Async operations (usually built-in)
 
 # Note: The POC is designed to work with minimal dependencies
 # Additional packages from the full version that are NOT required:

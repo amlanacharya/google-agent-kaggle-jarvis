@@ -723,7 +723,8 @@ async def interactive_mode():
 # MAIN EXECUTION
 # ============================================================================
 
-if __name__ == "__main__":
+async def main():
+    """Main execution function."""
     print("\n" + "="*80)
     print("JARVIS AI ASSISTANT - Kaggle POC Version")
     print("="*80)
@@ -732,8 +733,7 @@ if __name__ == "__main__":
     # Check API key
     if not GOOGLE_API_KEY:
         print("Please set GOOGLE_API_KEY to continue.")
-        import sys
-        sys.exit(1)
+        return
 
     # Choose mode
     print("Select mode:")
@@ -745,21 +745,51 @@ if __name__ == "__main__":
         choice = input("Enter choice (1 or 2): ").strip()
 
         if choice == "1":
-            asyncio.run(run_demo())
+            await run_demo()
         elif choice == "2":
-            asyncio.run(interactive_mode())
+            await interactive_mode()
         else:
             print("Running automated demo (default)...")
-            asyncio.run(run_demo())
+            await run_demo()
 
     except EOFError:
         # Running in Jupyter/Kaggle notebook - no interactive input available
         print("📓 Running in notebook environment - starting automated demo...")
         print()
-        asyncio.run(run_demo())
+        await run_demo()
     except KeyboardInterrupt:
         print("\n\n👋 Exiting...")
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
         traceback.print_exc()
+
+
+def run_main_safely():
+    """Run main safely in both script and notebook environments."""
+    try:
+        # Check if there's already a running event loop
+        loop = asyncio.get_running_loop()
+        # We're in a notebook with a running loop
+        # Try to apply nest_asyncio to allow nested loops
+        try:
+            import nest_asyncio
+            nest_asyncio.apply()
+            print("📓 Notebook environment detected, applying nest_asyncio...")
+            asyncio.run(main())
+        except ImportError:
+            # nest_asyncio not available, schedule as task
+            print("🔄 Notebook environment detected (install nest_asyncio for better support)")
+            print("📌 Scheduling task... Please wait for execution to complete.")
+            # Create task and ensure it runs
+            task = asyncio.ensure_future(main())
+            # Return task so it can be awaited if needed
+            return task
+    except RuntimeError:
+        # No running loop - we're in a script, use asyncio.run()
+        asyncio.run(main())
+
+
+if __name__ == "__main__":
+    _task = run_main_safely()
+    # Note: In notebooks without nest_asyncio, you may need to await _task

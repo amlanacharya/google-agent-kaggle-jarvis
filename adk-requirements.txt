@@ -13,6 +13,9 @@ google-generativeai>=0.3.0     # Gemini API client
 # Core dependencies
 numpy>=1.24.0                  # Numerical operations
 
+# Notebook support (highly recommended for Kaggle/Jupyter)
+nest-asyncio>=1.5.0            # Allows nested async event loops in notebooks
+
 # Note: google-adk includes many dependencies automatically:
 # - google-genai (types, API clients)
 # - asyncio support
