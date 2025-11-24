@@ -634,15 +634,30 @@ async def interactive_mode():
 
     session_name = "interactive_session"
 
-    # Ensure session exists
+    # Ensure session exists - be more robust
+    print("🔧 Initializing interactive session...")
     try:
-        await session_service.create_session(
+        # Try to get existing session first
+        session = await session_service.get_session(
             app_name=APP_NAME,
             user_id=USER_ID,
             session_id=session_name
         )
+        print(f"✓ Using existing session: {session_name}")
     except Exception:
-        pass
+        # Create new session
+        try:
+            session = await session_service.create_session(
+                app_name=APP_NAME,
+                user_id=USER_ID,
+                session_id=session_name
+            )
+            session.state["user_id"] = USER_ID
+            await session_service.update_session(session)
+            print(f"✓ Created new session: {session_name}")
+        except Exception as e:
+            print(f"⚠️  Warning: Could not initialize session: {e}")
+            print(f"⚠️  Interactive mode may have limited functionality")
 
     while True:
         try:
