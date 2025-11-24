@@ -377,23 +377,43 @@ async def run_session(
         print(f"Session: {session_name}")
         print(f"{'='*80}")
 
-    # Create or fetch session
+    # Create or fetch session - be more robust
+    session = None
     try:
-        session = await session_service.create_session(
-            app_name=runner_instance.app_name,
-            user_id=USER_ID,
-            session_id=session_name
-        )
-        # Store user_id in session state for tools
-        session.state["user_id"] = USER_ID
-        await session_service.update_session(session)
-    except Exception:
-        # If already exists, retrieve it
+        # Try to get existing session first
         session = await session_service.get_session(
             app_name=runner_instance.app_name,
             user_id=USER_ID,
             session_id=session_name
         )
+        if verbose:
+            print(f"✓ Using existing session: {session_name}")
+    except Exception:
+        # Session doesn't exist, create it
+        try:
+            session = await session_service.create_session(
+                app_name=runner_instance.app_name,
+                user_id=USER_ID,
+                session_id=session_name
+            )
+            # Store user_id in session state for tools
+            if session:
+                session.state["user_id"] = USER_ID
+                await session_service.update_session(session)
+            if verbose:
+                print(f"✓ Created new session: {session_name}")
+        except Exception as e:
+            if verbose:
+                print(f"⚠️  Warning: Could not create/get session: {e}")
+                print(f"⚠️  Proceeding with default session...")
+            # Create a simple default session as fallback
+            session = await session_service.create_session(
+                app_name=runner_instance.app_name,
+                user_id=USER_ID,
+                session_id=f"default_{session_name}"
+            )
+            session.state["user_id"] = USER_ID
+            await session_service.update_session(session)
 
     if user_queries:
         if isinstance(user_queries, str):
@@ -518,6 +538,23 @@ async def run_demo():
 
     # Create evaluation set
     create_evaluation_set()
+
+    # Pre-initialize sessions for demo to avoid "session not found" errors
+    demo_sessions = ["demo_research", "demo_analysis", "demo_memory", "demo_multi"]
+    print("\n🔧 Pre-initializing demo sessions...")
+    for session_id in demo_sessions:
+        try:
+            session = await session_service.create_session(
+                app_name=APP_NAME,
+                user_id=USER_ID,
+                session_id=session_id
+            )
+            session.state["user_id"] = USER_ID
+            await session_service.update_session(session)
+        except Exception:
+            # Session might already exist, that's ok
+            pass
+    print("✅ Demo sessions initialized")
 
     print("\n✅ JARVIS initialized successfully!")
 
